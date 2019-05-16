@@ -4,12 +4,18 @@ var express     = require('express');
 var bodyParser  = require('body-parser');
 var expect      = require('chai').expect;
 var cors        = require('cors');
+var dotenv      =require('dotenv');
+var helmet      =require('helmet');
 
 var apiRoutes         = require('./routes/api.js');
 var fccTestingRoutes  = require('./routes/fcctesting.js');
 var runner            = require('./test-runner');
 
 var app = express();
+dotenv.config();// to be able to access the .env folder
+app.use(helmet.frameguard({action:'sameorigin'}));//X-Frame-Options: SAMEORIGIN will prevent anyone from putting this page in an iframe unless it’s on the same origin.
+app.use(helmet.dnsPrefetchControl())// Sets "X-DNS-Prefetch-Control: off".
+app.use(helmet.referrerPolicy({policy:'same-origin'}));//only send the Referer header for pages on the same origin.
 
 app.use('/public', express.static(process.cwd() + '/public'));
 
@@ -52,7 +58,8 @@ app.use(function(req, res, next) {
 
 //Start our server and tests!
 app.listen(process.env.PORT || 3000, function () {
-  console.log("Listening on port " + process.env.PORT);
+  var port=process.env.PORT
+  console.log("Listening on port " + this.address().port);
   if(process.env.NODE_ENV==='test') {
     console.log('Running Tests...');
     setTimeout(function () {
